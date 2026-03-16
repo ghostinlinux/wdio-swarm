@@ -1,21 +1,35 @@
 {
-  "name": "wdio-data-runner",
+  "name": "wdio-swarm",
   "version": "1.0.0",
-  "description": "Custom data-driven parallel runner for WebdriverIO",
+  "description": "Data-driven parallel test runner for WebdriverIO — unleash a swarm of workers from Excel, CSV, or JSON",
   "main": "src/index.js",
   "type": "module",
   "bin": {
-    "wdio-data-runner": "./bin/runner.js"
+    "wdio-swarm": "./bin/runner.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run"
   },
-  "author": "",
+  "author": "Pratik Kumar",
+  "keywords": [
+    "webdriverio",
+    "wdio",
+    "parallel",
+    "data-driven",
+    "excel",
+    "csv",
+    "json",
+    "appium",
+    "swarm"
+  ],
   "license": "ISC",
   "dependencies": {
     "@wdio/cli": "^9.1.0",
     "commander": "^11.1.0",
     "csv-parse": "^6.1.0",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
   }
 }

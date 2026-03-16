@@ -1,16 +1,16 @@
 /**
  * testDataResolver.js
  * 
- * Centralized utility exported by the `wdio-data-runner` package.
+ * Centralized utility exported by the `wdio-swarm` package.
  * Allows any spec file to resolve test data values without knowing
  * whether the runner is active or not.
  *
  * Usage in any spec:
- *   import { resolveData } from 'wdio-data-runner';
+ *   import { resolveData } from 'wdio-swarm';
  *   const memberID = resolveData('InsuranceNbr', `${env}_memberIDNationsAndroid`);
  */
 
-const isDataRunnerActive = process.env.WDIO_DATA_RUNNER_ACTIVE === 'true';
+const getIsDataRunnerActive = () => process.env.WDR_ACTIVE === 'true';
 
 /**
  * Resolves a value either from the data runner's injected row (Excel/JSON column)
@@ -21,7 +21,7 @@ const isDataRunnerActive = process.env.WDIO_DATA_RUNNER_ACTIVE === 'true';
  * @returns {string|undefined}
  */
 export function resolveData(dataColumn, envFallback) {
-  if (isDataRunnerActive) {
+  if (getIsDataRunnerActive()) {
     return process.env[dataColumn];
   }
   return process.env[envFallback];
@@ -31,5 +31,5 @@ export function resolveData(dataColumn, envFallback) {
  * Returns true if the WDIO Data Runner is currently orchestrating this execution.
  */
 export function isRunnerActive() {
-  return isDataRunnerActive;
+  return getIsDataRunnerActive();
 }
