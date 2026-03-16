@@ -70,11 +70,9 @@ import { resolveData } from 'wdio-swarm';
 
 describe('Login Suite', () => {
     it('should login user', async () => {
-        // Reads 'Username' from current swarm row, or 'DEFAULT_USER' from .env
+        // Reads 'Username' from current data file, or 'DEFAULT_USER' from .env
         const user = resolveData('Username', 'DEFAULT_USER');
         
-        await browser.url(`/login`);
-        await $('#username').setValue(user);
         // ... your test logic
     });
 });
@@ -141,10 +139,21 @@ wdio-swarm -c wdio.conf.js -d data.xlsx --filter "Role=admin" --filter "Region=U
 
 ## 🔐 .env Integration
 
-Every CLI flag can be pre-configured in your `.env` file using the `WDR_` prefix.
+Every CLI flag can be pre-configured in your `.env` file or environment using the `WDR_` prefix.
+
+| Option | .env / Environment Variable |
+| :--- | :--- |
+| `--data` | `WDR_DATA` |
+| `--strategy` | `WDR_STRATEGY` |
+| `--limit` | `WDR_LIMIT` |
+| `--skip` | `WDR_SKIP` |
+| `--filter` | `WDR_FILTER` |
+| `--retries` | `WDR_RETRIES` |
+| `--task-timeout`| `WDR_TASK_TIMEOUT` |
+| `--output` | `WDR_OUTPUT` |
 
 ```bash
-# .env
+# Example .env file
 WDR_DATA=data/users.xlsx
 WDR_STRATEGY=user-first
 WDR_RETRIES=2

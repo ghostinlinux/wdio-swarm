@@ -18,18 +18,18 @@ program
   .description('Data-driven parallel test runner for WebdriverIO')
   .version(pkg.version)
   .requiredOption('-c, --config <path>', 'Path to WebdriverIO configuration file')
-  .option('-d, --data <path>', 'Path to test data file (.xlsx, .xls, .csv, .json)')
+  .option('-d, --data <path>', 'Path to test data file (.xlsx, .xls, .csv, .json)', process.env.WDR_DATA)
   .option('-s, --spec <path>', 'Specific spec file to run (overrides config)')
-  .option('--strategy <type>', 'Execution strategy: spec-first or user-first', 'spec-first')
-  .option('--limit <number>', 'Only process the first N rows of data')
-  .option('--skip <number>', 'Skip the first N rows of data', '0')
+  .option('--strategy <type>', 'Execution strategy: spec-first or user-first', process.env.WDR_STRATEGY || 'spec-first')
+  .option('--limit <number>', 'Only process the first N rows of data', process.env.WDR_LIMIT)
+  .option('--skip <number>', 'Skip the first N rows of data', process.env.WDR_SKIP || '0')
   .option('--filter <Column=Value>', 'Filter data by column values (can be repeated)', (val, memo: string[]) => {
     memo.push(val);
     return memo;
-  }, [])
-  .option('--retries <number>', 'Number of retries for failed tasks', '0')
-  .option('--task-timeout <seconds>', 'Maximum time allowed for a single task')
-  .option('--output <path>', 'Save results to a JSON file')
+  }, process.env.WDR_FILTER ? [process.env.WDR_FILTER] : [])
+  .option('--retries <number>', 'Number of retries for failed tasks', process.env.WDR_RETRIES || '0')
+  .option('--task-timeout <seconds>', 'Maximum time allowed for a single task', process.env.WDR_TASK_TIMEOUT)
+  .option('--output <path>', 'Save results to a JSON file', process.env.WDR_OUTPUT)
   .option('--rerun-failed <path>', 'Re-run only failed tasks from a results JSON file')
   .showHelpAfterError();
 
