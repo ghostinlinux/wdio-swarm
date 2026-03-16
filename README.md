@@ -125,7 +125,7 @@ wdio-swarm -c wdio.conf.js -d data.xlsx --filter "Role=admin" --filter "Region=U
 | :--- | :--- | :--- | :--- |
 | `-c, --config` | **Required.** Path to your WebdriverIO config. | - | - |
 | `-d, --data` | Path to data source (.xlsx, .csv, .json). | `WDR_DATA` | - |
-| `-s, --spec` | Run a specific spec file (overrides config). | `WDR_SPEC` | - |
+| `-s, --spec` | Run a specific spec file (overrides config). | - | - |
 | `--strategy` | Task queuing strategy (`spec-first` \| `user-first`). | `WDR_STRATEGY` | `spec-first` |
 | `--limit` | Only process the first N rows of data. | `WDR_LIMIT` | - |
 | `--skip` | Skip the first N rows of data. | `WDR_SKIP` | `0` |
