@@ -1,6 +1,6 @@
 {
   "name": "wdio-swarm",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Data-driven parallel test runner for WebdriverIO — unleash a swarm of workers from Excel, CSV, or JSON",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
