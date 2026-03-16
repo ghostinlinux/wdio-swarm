@@ -1,28 +1,35 @@
 # wdio-swarm 🐝
 
-> **Data-driven parallel test runner for WebdriverIO.**  
-> Unleash a swarm of workers from Excel, CSV, or JSON — no code changes needed in your config.
+[![npm version](https://img.shields.io/npm/v/wdio-swarm.svg?style=flat-square)](https://www.npmjs.com/package/wdio-swarm)
+[![npm downloads](https://img.shields.io/npm/dm/wdio-swarm.svg?style=flat-square)](https://www.npmjs.com/package/wdio-swarm)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg?style=flat-square)](https://opensource.org/licenses/ISC)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 
-[![npm](https://img.shields.io/npm/v/wdio-swarm)](https://www.npmjs.com/package/wdio-swarm)
-[![license](https://img.shields.io/npm/l/wdio-swarm)](LICENSE)
-
----
-
-## Why wdio-swarm?
-
-Native WebdriverIO parallelizes at the **file** level. If you have 1 spec and 100 users in an Excel sheet, WDIO runs them **sequentially** on 1 device — no matter how many devices you have.
-
-`wdio-swarm` parallelizes at the **data** level:
-
-```
-1 spec + 100 Excel rows  →  100 parallel workers, each with a unique user payload
-```
+**wdio-swarm** is a high-performance, data-driven orchestration layer for WebdriverIO. It enables massive parallelization at the **data level**, allowing you to execute a single specification across hundreds of data rows simultaneously — something native WebdriverIO cannot do out of the box.
 
 ---
 
-## Getting Started
+## 🚀 Key Features
 
-### Step 1 — Install
+*   **⚡ Data-Level Parallelism**: Distribute Excel/CSV/JSON rows across multiple workers instantly.
+*   **🛠 No-Config Integration**: Works with your existing `wdio.conf.js` without any modifications.
+*   **🧩 Smart Orchestration**: Advanced task queuing with `spec-first` or `user-first` strategies.
+*   **🛡 Enterprise Resiliency**: Built-in retry logic, task timeouts, and selective re-running of failed tasks.
+*   **🔍 Runtime Filtering**: Execute specific subsets of data using powerful CLI filters.
+*   **📦 Type-Safe**: Written in 100% TypeScript for reliable, type-safe automation.
+
+---
+
+## 📖 Table of Contents
+- [Installation](#-installation)
+- [How it Works](#-how-it-works)
+- [Quick Start](#-quick-start)
+- [CLI Reference](#-cli-reference)
+- [.env Integration](#-env-integration)
+
+---
+
+## 📥 Installation
 
 ```bash
 npm install wdio-swarm
@@ -30,253 +37,121 @@ npm install wdio-swarm
 
 ---
 
-### Step 2 — Prepare your data file
+## 🧠 How it Works
 
-Your data file can be **Excel, CSV, or JSON**. Each row becomes one parallel test execution.
+Native WebdriverIO parallelizes at the **spec file** level. If you have 1 spec and 100 rows of data, WDIO runs them sequentially. 
 
-**Excel / CSV** — each column header becomes an environment variable for the worker:
+**wdio-swarm** modifies this behavior:
+1. It parses your data source (Excel, CSV, or JSON).
+2. It breaks every row into a unique "Task."
+3. It "swarms" your available devices/workers, injecting row data into each process.
+
+> **Result:** 1 Spec + 100 Rows = 100 Parallel Executions (limited only by your `maxInstances`).
+
+---
+
+## ⚡ Quick Start
+
+### 1. Prepare your Data
+Create a data file (`data.xlsx`, `data.csv`, or `data.json`). Column headers represent the environment variables injected into your tests.
 
 | Username   | Role  | Region |
 |------------|-------|--------|
 | user_001   | admin | US     |
 | user_002   | basic | EU     |
 
-**JSON** — an array of objects:
-```json
-[
-  { "Username": "user_001", "Role": "admin", "Region": "US" },
-  { "Username": "user_002", "Role": "basic", "Region": "EU" }
-]
-```
+> **Note:** You can name your data file anything you like (e.g., `members.xlsx` or `prod_data.json`). The filename `data.xlsx` used in these examples is just a placeholder.
 
----
+### 2. Update your Spec
+Use the `resolveData` helper to bridge the gap between local development and swarm execution.
 
-### Step 3 — Update your spec file
-
-Use `resolveData` to make your spec work in **both normal WDIO mode and swarm mode**:
-
-```javascript
+```typescript
 import { resolveData } from 'wdio-swarm';
 
-// ✅ In swarm mode  → reads 'Username' column from the current Excel/JSON row
-// ✅ In normal mode → reads 'MY_ENV_USERNAME' from your local .env file
-const testUser = resolveData('Username', 'MY_ENV_USERNAME');
+describe('Login Suite', () => {
+    it('should login user', async () => {
+        // Reads 'Username' from current swarm row, or 'DEFAULT_USER' from .env
+        const user = resolveData('Username', 'DEFAULT_USER');
+        
+        await browser.url(`/login`);
+        await $('#username').setValue(user);
+        // ... your test logic
+    });
+});
 ```
 
-> **Note:** If your test does **not** use external data and always reads from `.env`, you can skip this step entirely.
+### 3. Run the Swarm
+```bash
+npx wdio-swarm --config config/wdio.conf.js --data data.xlsx
+```
 
 ---
 
-### Step 4 — Add a script to `package.json`
-
-```json
-{
-  "scripts": {
-    "test:swarm": "wdio-swarm --config config/wdio.conf.js"
-  }
-}
-```
-
 ---
 
-### Step 5 — Run it
+## ⚙️ Advanced Usage
+
+### Execution Strategies
+*   `spec-first` (Default): Finish all data rows for Spec A, then move to Spec B.
+*   `user-first`: Run all applicable specs for User 1, then all for User 2.
 
 ```bash
-npm run test:swarm -- --data users.xlsx
+# Run all specs for User 1 before moving to User 2
+wdio-swarm -c wdio.conf.js -d data.xlsx --strategy user-first
 ```
 
-The runner will:
-1. Load all rows from `users.xlsx`
-2. Read specs and `maxInstances` from your `wdio.conf.js`
-3. Build a task queue (`spec × data row` combinations)
-4. Dispatch parallel workers — keeping your devices fully utilized until all rows are processed
-
----
-
-## All Features & Commands
-
-### Execution Strategy
-
-Control the order in which spec × data tasks are queued.
+### Selective Re-runs
+If only a few tasks fail, re-run only the failures without re-reading the original data file.
 
 ```bash
-# spec-first (default) — complete all users through Spec 1, then Spec 2...
-npm run test:swarm -- --data users.xlsx --strategy spec-first
+# Save results
+wdio-swarm -c wdio.conf.js -d data.xlsx --output results.json
 
-# user-first — run all specs for User 1, then all specs for User 2...
-npm run test:swarm -- --data users.xlsx --strategy user-first
+# Re-run ONLY the failures
+wdio-swarm -c wdio.conf.js --rerun-failed results.json
 ```
 
----
-
-### Row Limit & Skip
-
-Process a subset of rows — useful for debugging or splitting across CI machines.
+### Runtime Filtering
+Filter your target data dynamically without editing the file.
 
 ```bash
-# Run only the first 10 rows
-npm run test:swarm -- --data users.xlsx --limit 10
-
-# Skip the first 20 rows, run all remaining
-npm run test:swarm -- --data users.xlsx --skip 20
-
-# Process rows 21–30 only
-npm run test:swarm -- --data users.xlsx --skip 20 --limit 10
+# Run only 'admin' users in the 'US' region
+wdio-swarm -c wdio.conf.js -d data.xlsx --filter "Role=admin" --filter "Region=US"
 ```
 
 ---
 
-### Data Filtering
+## 🛠 CLI Reference
 
-Filter rows by column value at runtime. Multiple `--filter` flags use **AND** logic.
+| Option | Description | Environment Variable | Default |
+| :--- | :--- | :--- | :--- |
+| `-c, --config` | **Required.** Path to your WebdriverIO config. | - | - |
+| `-d, --data` | Path to data source (.xlsx, .csv, .json). | `WDR_DATA` | - |
+| `-s, --spec` | Run a specific spec file (overrides config). | `WDR_SPEC` | - |
+| `--strategy` | Task queuing strategy (`spec-first` \| `user-first`). | `WDR_STRATEGY` | `spec-first` |
+| `--limit` | Only process the first N rows of data. | `WDR_LIMIT` | - |
+| `--skip` | Skip the first N rows of data. | `WDR_SKIP` | `0` |
+| `--filter` | Filter by `Column=Value` (Repeatable). | `WDR_FILTER` | - |
+| `--retries` | Number of retries for failed tasks. | `WDR_RETRIES` | `0` |
+| `--task-timeout`| Max time in seconds for a single worker. | `WDR_TASK_TIMEOUT` | - |
+| `--output` | Path to save JSON results. | `WDR_OUTPUT` | - |
+| `--rerun-failed` | Re-run failures from a results file. | - | - |
+
+---
+
+## 🔐 .env Integration
+
+Every CLI flag can be pre-configured in your `.env` file using the `WDR_` prefix.
 
 ```bash
-# Only admin users
-npm run test:swarm -- --data users.xlsx --filter "Role=admin"
-
-# Only admin users in the US region
-npm run test:swarm -- --data users.xlsx --filter "Role=admin" --filter "Region=US"
-```
-
----
-
-### Retry on Failure
-
-Automatically retry a failed worker up to N times before marking it as failed.
-
-```bash
-npm run test:swarm -- --data users.xlsx --retries 2
-```
-
----
-
-### Task Timeout
-
-Kill any worker that runs longer than N seconds (prevents hung devices from blocking the queue).
-
-```bash
-npm run test:swarm -- --data users.xlsx --task-timeout 300
-```
-
----
-
-### Save Results & Re-run Failures
-
-Save every task's outcome to a JSON file. On the next run, replay only the failures — without re-reading the original data file.
-
-```bash
-# Run 1 — saves results to run1.json
-npm run test:swarm -- --data users.xlsx --output run1.json
-
-# Run 2 — re-runs only the tasks that failed in Run 1
-npm run test:swarm -- --rerun-failed run1.json
-```
-
-**Output file format:**
-```json
-[
-  {
-    "status": "failed",
-    "spec": "test/specs/login.test.js",
-    "data": { "Username": "user_001", "Role": "admin", "Region": "US" }
-  },
-  {
-    "status": "passed",
-    "spec": "test/specs/login.test.js",
-    "data": { "Username": "user_002", "Role": "basic", "Region": "EU" }
-  }
-]
-```
-
----
-
-### Run a Specific Spec
-
-Override the specs in your config and target a single file.
-
-```bash
-npm run test:swarm -- --data users.xlsx --spec test/specs/login.test.js
-```
-
----
-
-### Combining Multiple Features
-
-```bash
-npm run test:swarm -- \
-  --data users.xlsx \
-  --filter "Role=admin" \
-  --skip 10 \
-  --limit 50 \
-  --retries 2 \
-  --task-timeout 300 \
-  --strategy user-first \
-  --output results.json
-```
-
----
-
-## .env Support
-
-Every CLI flag has a `WDR_*` environment variable equivalent.  
-**Priority:** `CLI flag > .env variable > default value`
-
-```env
-# .env — set once, no need to pass on every command
+# .env
 WDR_DATA=data/users.xlsx
 WDR_STRATEGY=user-first
 WDR_RETRIES=2
 WDR_TASK_TIMEOUT=300
-WDR_LIMIT=50
-WDR_SKIP=0
-WDR_FILTER=Role=admin
-WDR_OUTPUT=results.json
 ```
 
 ---
 
-## CLI Reference
-
-```
-Usage: wdio-swarm [options]
-
-Options:
-  -c, --config <path>         Path to WebdriverIO configuration file  [required]
-  -d, --data <path>           Path to data file (.xlsx, .xls, .csv, .json)
-  -s, --spec <path>           Specific spec file to run
-  --strategy <type>           spec-first | user-first  (default: spec-first)
-  --limit <number>            Process only the first N rows
-  --skip <number>             Skip the first N rows  (default: 0)
-  --filter <Column=Value>     Filter rows by column (repeatable)
-  --retries <number>          Retry a failed task N times  (default: 0)
-  --task-timeout <seconds>    Kill a worker exceeding N seconds
-  --output <path>             Save run results to a JSON file
-  --rerun-failed <path>       Re-run only failures from a previous results file
-  -h, --help                  Show help
-```
-
----
-
-## How It Works Internally
-
-```
-wdio-swarm --config wdio.conf.js --data users.xlsx
-     │
-     ├─ 1. Reads all rows from users.xlsx → [ {row1}, {row2}, ... ]
-     ├─ 2. Reads wdio.conf.js → specs[], maxInstances, capabilities[]
-     ├─ 3. Applies --filter / --skip / --limit
-     ├─ 4. Builds task queue using strategy (spec × data row combinations)
-     └─ 5. Dispatches up to maxInstances parallel WDIO child processes
-              │
-              ├─ Worker 1: npx wdio run wdio.conf.js --spec login.js  (row 1 injected via env)
-              ├─ Worker 2: npx wdio run wdio.conf.js --spec login.js  (row 2 injected via env)
-              └─ Worker 3: npx wdio run wdio.conf.js --spec login.js  (row 3 injected via env)
-```
-
-Each worker receives its data row as environment variables (`process.env`), which your spec reads via `resolveData()`.
-
----
-
-## License
-
-ISC
+## 📄 License
+ISC © [Pratik Kumar](https://github.com/ghostinlinux)

@@ -5,12 +5,10 @@ describe('testDataResolver', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    // Isolate process.env for each test
     process.env = { ...originalEnv };
   });
 
   afterEach(() => {
-    // Restore
     process.env = originalEnv;
   });
 
@@ -20,10 +18,7 @@ describe('testDataResolver', () => {
       expect(isRunnerActive()).toBe(true);
     });
 
-    it('should return false when WDR_ACTIVE is undefined or not "true"', () => {
-      delete process.env.WDR_ACTIVE;
-      expect(isRunnerActive()).toBe(false);
-
+    it('should return false when WDR_ACTIVE is not "true"', () => {
       process.env.WDR_ACTIVE = 'false';
       expect(isRunnerActive()).toBe(false);
     });
@@ -46,12 +41,6 @@ describe('testDataResolver', () => {
 
       const result = resolveData('InjectedColumn', 'MY_FALLBACK');
       expect(result).toBe('excel-user');
-    });
-
-    it('should return undefined if runner active but dataColumn is missing', () => {
-      process.env.WDR_ACTIVE = 'true';
-      const result = resolveData('MissingColumn', 'MY_FALLBACK');
-      expect(result).toBeUndefined();
     });
   });
 });

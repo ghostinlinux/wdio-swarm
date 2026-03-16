@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TaskQueue } from '../src/taskQueue.js';
+import { TaskQueue, type Task } from '../src/taskQueue.js';
 
 describe('TaskQueue', () => {
   const sampleSpecs = ['spec1.js', 'spec2.js'];
@@ -12,7 +12,7 @@ describe('TaskQueue', () => {
   describe('Core queue building', () => {
     it('should build spec-first queues correctly', () => {
       const queue = new TaskQueue(sampleSpecs, sampleData, 'spec-first');
-      const tasks = queue.queue; // Access internal property testing state
+      const tasks: Task[] = queue.queue; 
       expect(tasks.length).toBe(6); // 2 specs * 3 users
       
       // Spec first: all users do spec1, then all users do spec2
@@ -26,7 +26,7 @@ describe('TaskQueue', () => {
 
     it('should build user-first queues correctly', () => {
       const queue = new TaskQueue(sampleSpecs, sampleData, 'user-first');
-      const tasks = queue.queue;
+      const tasks: Task[] = queue.queue;
       expect(tasks.length).toBe(6);
       
       // User first: user1 does all specs, then user2 does all specs
@@ -47,8 +47,8 @@ describe('TaskQueue', () => {
       
       const task = queue.getNextTask();
       expect(task).toBeDefined();
-      expect(task.specPath).toBe('s1');
-      expect(task.dataIndex).toBe(0);
+      expect(task?.specPath).toBe('s1');
+      expect(task?.dataIndex).toBe(0);
 
       expect(queue.isEmpty()).toBe(true);
       expect(queue.getTotalTasks()).toBe(0);
