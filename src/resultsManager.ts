@@ -13,7 +13,7 @@ export interface TestResult {
 
 /**
  * ResultsManager
- * 
+ *
  * Tracks outcomes and persists them to JSON for re-run support.
  */
 export class ResultsManager {
@@ -21,9 +21,7 @@ export class ResultsManager {
   public results: TestResult[];
 
   constructor(outputPath?: string | null) {
-    this.outputPath = outputPath
-      ? path.resolve(process.cwd(), outputPath)
-      : null;
+    this.outputPath = outputPath ? path.resolve(process.cwd(), outputPath) : null;
     this.results = [];
   }
 
@@ -31,10 +29,10 @@ export class ResultsManager {
    * Records the result of a task execution.
    */
   public record(
-    task: Task, 
-    status: 'passed' | 'failed' | 'skipped', 
-    attempts: number = 1, 
-    error?: string
+    task: Task,
+    status: 'passed' | 'failed' | 'skipped',
+    attempts: number = 1,
+    error?: string,
   ): void {
     this.results.push({
       status,
@@ -55,12 +53,14 @@ export class ResultsManager {
       fs.writeFileSync(this.outputPath, JSON.stringify(this.results, null, 2), 'utf-8');
       console.log(`\n📄 Results saved to: ${this.outputPath}`);
 
-      const passed = this.results.filter(r => r.status === 'passed').length;
-      const failed = this.results.filter(r => r.status === 'failed').length;
+      const passed = this.results.filter((r) => r.status === 'passed').length;
+      const failed = this.results.filter((r) => r.status === 'failed').length;
       console.log(`   ✅ Passed: ${passed} | ❌ Failed: ${failed} | Total: ${this.results.length}`);
-      
+
       if (failed > 0) {
-        console.log(`   💡 Re-run failures: wdio-swarm --config <path> --rerun-failed ${this.outputPath}`);
+        console.log(
+          `   💡 Re-run failures: wdio-swarm --config <path> --rerun-failed ${this.outputPath}`,
+        );
       }
     } catch (err: any) {
       console.error(`Error saving results to ${this.outputPath}:`, err.message);
@@ -73,11 +73,11 @@ export class ResultsManager {
   public static loadFailedTasks(filePath: string): TestResult[] {
     const absolutePath = path.resolve(process.cwd(), filePath);
     if (!fs.existsSync(absolutePath)) return [];
-    
+
     try {
       const content = fs.readFileSync(absolutePath, 'utf-8');
       const results: TestResult[] = JSON.parse(content);
-      return results.filter(r => r.status === 'failed' || r.status === 'skipped');
+      return results.filter((r) => r.status === 'failed' || r.status === 'skipped');
     } catch (err) {
       return [];
     }

@@ -9,15 +9,21 @@ export { resolveData, isRunnerActive } from './testDataResolver.js';
 
 /**
  * Orchestrates the entire parallel test execution.
- * 
+ *
  * @param {string}   configPath - Absolute path to WDIO config.
  * @param {any[]}    testData   - Array of data rows (already sliced/filtered).
  * @param {any}      options    - CLI configuration options.
  */
-export async function executeRunner(configPath: string, testData: any[], options: any = {}): Promise<void> {
+export async function executeRunner(
+  configPath: string,
+  testData: any[],
+  options: any = {},
+): Promise<void> {
   const strategy: string = options.strategy || 'spec-first';
   const maxRetries: number = parseInt(options.retries) || 0;
-  const taskTimeout: number | null = options.taskTimeout ? parseInt(options.taskTimeout) * 1000 : null;
+  const taskTimeout: number | null = options.taskTimeout
+    ? parseInt(options.taskTimeout) * 1000
+    : null;
   const outputPath: string | null = options.output || null;
   const specOverride: string | null = options.spec || null;
   const isRerun: boolean = options.isRerun || false;
@@ -55,8 +61,8 @@ export async function executeRunner(configPath: string, testData: any[], options
     const q = new TaskQueue(targetSpecs, testData, strategy);
     taskList = [];
     while (!q.isEmpty()) {
-       const task = q.getNextTask();
-       if (task) taskList.push(task);
+      const task = q.getNextTask();
+      if (task) taskList.push(task);
     }
   }
 
@@ -64,7 +70,9 @@ export async function executeRunner(configPath: string, testData: any[], options
   const resultsManager = new ResultsManager(outputPath);
   const totalTasks = taskList.length;
 
-  console.log(`Device Pool: ${capabilities.length} capability(ies), expanded to ${expandedCapabilities.length} concurrent workers.`);
+  console.log(
+    `Device Pool: ${capabilities.length} capability(ies), expanded to ${expandedCapabilities.length} concurrent workers.`,
+  );
   if (!isRerun) console.log(`Strategy: ${strategy}`);
   console.log(`Total tasks: ${totalTasks}`);
 
@@ -94,7 +102,9 @@ export async function executeRunner(configPath: string, testData: any[], options
         deviceManager.markDeviceBusy(device.id);
         activeWorkers++;
 
-        console.log(`▶  [${task.id}] → ${task.specPath.split('/').pop()} (data index: ${task.dataIndex})`);
+        console.log(
+          `▶  [${task.id}] → ${task.specPath.split('/').pop()} (data index: ${task.dataIndex})`,
+        );
 
         runWithRetry(configPath, task, device.capability, maxRetries, taskTimeout)
           .then(({ code, attempts }) => {
@@ -102,12 +112,16 @@ export async function executeRunner(configPath: string, testData: any[], options
             completed++;
             resultsManager.record(task, status, attempts);
             const icon = status === 'passed' ? '✅' : '❌';
-            console.log(`${icon} [${task.id}] ${status.toUpperCase()} (attempts: ${attempts}) | ${completed}/${totalTasks} done`);
+            console.log(
+              `${icon} [${task.id}] ${status.toUpperCase()} (attempts: ${attempts}) | ${completed}/${totalTasks} done`,
+            );
           })
           .catch((err: Error) => {
             completed++;
             resultsManager.record(task, 'failed', maxRetries + 1, err.message);
-            console.error(`💥 [${task.id}] CRASHED: ${err.message} | ${completed}/${totalTasks} done`);
+            console.error(
+              `💥 [${task.id}] CRASHED: ${err.message} | ${completed}/${totalTasks} done`,
+            );
           })
           .finally(() => {
             deviceManager.markDeviceIdle(device.id);
@@ -125,11 +139,11 @@ export async function executeRunner(configPath: string, testData: any[], options
  * Executes a task with automatic retries on failure.
  */
 async function runWithRetry(
-  configPath: string, 
-  task: Task, 
-  capability: any, 
-  maxRetries: number, 
-  timeoutMs: number | null
+  configPath: string,
+  task: Task,
+  capability: any,
+  maxRetries: number,
+  timeoutMs: number | null,
 ): Promise<{ code: number; attempts: number }> {
   let attempts = 0;
   let lastCode = -1;
@@ -140,13 +154,17 @@ async function runWithRetry(
       const code = await executeTask(configPath, task, capability, timeoutMs);
       lastCode = code;
       if (code === 0) return { code, attempts };
-      
+
       if (attempts <= maxRetries) {
-        console.warn(`⚠️  [${task.id}] failed (exit ${code}), retrying... (${attempts}/${maxRetries})`);
+        console.warn(
+          `⚠️  [${task.id}] failed (exit ${code}), retrying... (${attempts}/${maxRetries})`,
+        );
       }
     } catch (err: any) {
       if (attempts <= maxRetries) {
-        console.warn(`⚠️  [${task.id}] error: ${err.message}, retrying... (${attempts}/${maxRetries})`);
+        console.warn(
+          `⚠️  [${task.id}] error: ${err.message}, retrying... (${attempts}/${maxRetries})`,
+        );
       } else {
         throw err;
       }

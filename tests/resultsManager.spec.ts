@@ -33,16 +33,16 @@ describe('ResultsManager', () => {
       attempts: 1,
       spec: 'test/login.js',
       dataIndex: 0,
-      data: { role: 'admin' }
+      data: { role: 'admin' },
     });
   });
 
   it('should save results to the specified path', () => {
     const rm = new ResultsManager('output.json');
     rm.record(sampleTask, 'failed', 2, 'Crash error');
-    
+
     rm.save();
-    
+
     // Check call
     // Note: in TypeScript we need to cast if using vi.mocked
     expect(fs.writeFileSync).toHaveBeenCalled();
@@ -51,9 +51,9 @@ describe('ResultsManager', () => {
   it('should skip save if outputPath is missing', () => {
     const rm = new ResultsManager();
     rm.record(sampleTask, 'passed', 1);
-    
+
     rm.save();
-    
+
     expect(fs.writeFileSync).not.toHaveBeenCalled();
   });
 });

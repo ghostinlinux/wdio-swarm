@@ -10,7 +10,7 @@ export interface Task {
 
 /**
  * TaskQueue
- * 
+ *
  * Orquestrates the cross-product of specifications and data rows into a processable queue.
  */
 export class TaskQueue {
@@ -29,11 +29,11 @@ export class TaskQueue {
       // user-first: all specs for user1 queue before any spec for user2
       for (let i = 0; i < testData.length; i++) {
         for (const spec of specs) {
-          this.queue.push({ 
-            id: `task_${taskId++}`, 
-            specPath: spec, 
-            data: testData[i], 
-            dataIndex: i 
+          this.queue.push({
+            id: `task_${taskId++}`,
+            specPath: spec,
+            data: testData[i],
+            dataIndex: i,
           });
         }
       }
@@ -41,11 +41,11 @@ export class TaskQueue {
       // spec-first (default): all users for spec1 queue before any user for spec2
       for (const spec of specs) {
         for (let i = 0; i < testData.length; i++) {
-          this.queue.push({ 
-            id: `task_${taskId++}`, 
-            specPath: spec, 
-            data: testData[i], 
-            dataIndex: i 
+          this.queue.push({
+            id: `task_${taskId++}`,
+            specPath: spec,
+            data: testData[i],
+            dataIndex: i,
           });
         }
       }
