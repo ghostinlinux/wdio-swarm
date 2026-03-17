@@ -12,27 +12,32 @@ import type { Task } from './taskQueue.js';
  * @returns {Promise<number>} Resolves with the worker's exit code.
  */
 export function executeTask(
-  configPath: string, 
-  task: Task, 
-  capability: any, 
+  configPath: string,
+  task: Task,
+  capability: any,
   timeoutMs: number | null = null
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     const absoluteSpecPath = path.resolve(process.cwd(), task.specPath);
 
-    // Prepare worker environment with injected data
+    // Prepare worker environment with injected data, safely coercing all to strings
+    const stringifiedData: Record<string, string> = {};
+    for (const [key, val] of Object.entries(task.data || {})) {
+      stringifiedData[key] = String(val);
+    }
+    
     const workerEnv: NodeJS.ProcessEnv = {
       ...process.env,
       WDR_ACTIVE: 'true',
-      ...task.data
+      ...stringifiedData
     };
 
     /**
      * Launch worker: npx wdio run <config> --spec <path>
      */
-    const child = spawn('npx', ['wdio', 'run', configPath, '--spec', absoluteSpecPath], {
+    const command = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+    const child = spawn(command, ['wdio', 'run', configPath, '--spec', absoluteSpecPath], {
       stdio: 'inherit',
-      shell: true,
       env: workerEnv
     });
 
