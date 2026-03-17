@@ -18,17 +18,38 @@ program
   .description('Data-driven parallel test runner for WebdriverIO')
   .version(pkg.version)
   .requiredOption('-c, --config <path>', 'Path to WebdriverIO configuration file')
-  .option('-d, --data <path>', 'Path to test data file (.xlsx, .xls, .csv, .json)', process.env.WDR_DATA)
+  .option(
+    '-d, --data <path>',
+    'Path to test data file (.xlsx, .xls, .csv, .json)',
+    process.env.WDR_DATA,
+  )
   .option('-s, --spec <path>', 'Specific spec file to run (overrides config)')
-  .option('--strategy <type>', 'Execution strategy: spec-first or user-first', process.env.WDR_STRATEGY || 'spec-first')
+  .option(
+    '--strategy <type>',
+    'Execution strategy: spec-first or user-first',
+    process.env.WDR_STRATEGY || 'spec-first',
+  )
   .option('--limit <number>', 'Only process the first N rows of data', process.env.WDR_LIMIT)
   .option('--skip <number>', 'Skip the first N rows of data', process.env.WDR_SKIP || '0')
-  .option('--filter <Column=Value>', 'Filter data by column values (can be repeated)', (val, memo: string[]) => {
-    memo.push(val);
-    return memo;
-  }, process.env.WDR_FILTER ? [process.env.WDR_FILTER] : [])
-  .option('--retries <number>', 'Number of retries for failed tasks', process.env.WDR_RETRIES || '0')
-  .option('--task-timeout <seconds>', 'Maximum time allowed for a single task', process.env.WDR_TASK_TIMEOUT)
+  .option(
+    '--filter <Column=Value>',
+    'Filter data by column values (can be repeated)',
+    (val, memo: string[]) => {
+      memo.push(val);
+      return memo;
+    },
+    process.env.WDR_FILTER ? [process.env.WDR_FILTER] : [],
+  )
+  .option(
+    '--retries <number>',
+    'Number of retries for failed tasks',
+    process.env.WDR_RETRIES || '0',
+  )
+  .option(
+    '--task-timeout <seconds>',
+    'Maximum time allowed for a single task',
+    process.env.WDR_TASK_TIMEOUT,
+  )
   .option('--output <path>', 'Save results to a JSON file', process.env.WDR_OUTPUT)
   .option('--rerun-failed <path>', 'Re-run only failed tasks from a results JSON file')
   .showHelpAfterError();
@@ -83,8 +104,8 @@ async function main() {
       options.filter.forEach((f: string) => {
         const [col, val] = f.split('=');
         if (col && val) {
-          testData = testData.filter(row =>
-            String(row[col] || '').toLowerCase() === val.toLowerCase()
+          testData = testData.filter(
+            (row) => String(row[col] || '').toLowerCase() === val.toLowerCase(),
           );
         }
       });
@@ -101,7 +122,6 @@ async function main() {
     }
 
     await executeRunner(options.config, testData, options);
-
   } catch (err: any) {
     console.error(`\n❌ Runner failed: ${err.message}`);
     process.exit(1);

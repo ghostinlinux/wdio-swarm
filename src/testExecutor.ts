@@ -4,7 +4,7 @@ import type { Task } from './taskQueue.js';
 
 /**
  * Spawns a single WebdriverIO worker for the given task.
- * 
+ *
  * @param {string} configPath - Path to the WDIO config file.
  * @param {Task}   task       - The task containing the spec and data for this worker.
  * @param {any}    capability - The specific browser capability to use.
@@ -15,7 +15,7 @@ export function executeTask(
   configPath: string,
   task: Task,
   capability: any,
-  timeoutMs: number | null = null
+  timeoutMs: number | null = null,
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     const absoluteSpecPath = path.resolve(process.cwd(), task.specPath);
@@ -25,11 +25,11 @@ export function executeTask(
     for (const [key, val] of Object.entries(task.data || {})) {
       stringifiedData[key] = String(val);
     }
-    
+
     const workerEnv: NodeJS.ProcessEnv = {
       ...process.env,
       WDR_ACTIVE: 'true',
-      ...stringifiedData
+      ...stringifiedData,
     };
 
     /**
@@ -38,7 +38,7 @@ export function executeTask(
     const command = process.platform === 'win32' ? 'npx.cmd' : 'npx';
     const child = spawn(command, ['wdio', 'run', configPath, '--spec', absoluteSpecPath], {
       stdio: 'inherit',
-      env: workerEnv
+      env: workerEnv,
     });
 
     let timeoutWatcher: NodeJS.Timeout | null = null;

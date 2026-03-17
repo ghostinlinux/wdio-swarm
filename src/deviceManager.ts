@@ -9,7 +9,7 @@ export interface Device {
 
 /**
  * DeviceManager
- * 
+ *
  * Manages the pool of available capabilities (devices) and tracks their busy/idle state.
  */
 export class DeviceManager {

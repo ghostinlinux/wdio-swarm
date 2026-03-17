@@ -12,7 +12,8 @@
     "build": "tsc",
     "test": "vitest run",
     "dev": "tsx bin/runner.ts",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "format": "prettier --write \"src/**/*.ts\" \"bin/**/*.ts\" \"tests/**/*.ts\""
   },
   "files": [
     "dist"
@@ -39,6 +40,7 @@
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.5.0",
+    "prettier": "^3.8.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"

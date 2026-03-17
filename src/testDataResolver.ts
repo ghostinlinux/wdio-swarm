@@ -1,6 +1,6 @@
 /**
  * testDataResolver.ts
- * 
+ *
  * Centralized utility exported by the `wdio-swarm` package.
  * Allows any spec file to resolve test data values without knowing
  * whether the runner is active or not.
