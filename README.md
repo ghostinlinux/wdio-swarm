@@ -95,7 +95,7 @@ npx wdio-swarm --config config/wdio.conf.js --data data.xlsx
 
 ```bash
 # Run all specs for User 1 before moving to User 2
-wdio-swarm -c wdio.conf.js -d data.xlsx --strategy user-first
+npx wdio-swarm -c wdio.conf.js -d data.xlsx --strategy user-first
 ```
 
 ### Selective Re-runs
@@ -103,10 +103,10 @@ If only a few tasks fail, re-run only the failures without re-reading the origin
 
 ```bash
 # Save results
-wdio-swarm -c wdio.conf.js -d data.xlsx --output results.json
+npx wdio-swarm -c wdio.conf.js -d data.xlsx --output results.json
 
 # Re-run ONLY the failures
-wdio-swarm -c wdio.conf.js --rerun-failed results.json
+npx wdio-swarm -c wdio.conf.js --rerun-failed results.json
 ```
 
 ### Runtime Filtering
@@ -114,7 +114,7 @@ Filter your target data dynamically without editing the file.
 
 ```bash
 # Run only 'admin' users in the 'US' region
-wdio-swarm -c wdio.conf.js -d data.xlsx --filter "Role=admin" --filter "Region=US"
+npx wdio-swarm -c wdio.conf.js -d data.xlsx --filter "Role=admin" --filter "Region=US"
 ```
 
 ---
@@ -160,6 +160,20 @@ WDR_RETRIES=2
 WDR_TASK_TIMEOUT=300
 ```
 
+## 📦 NPM Script Usage
+
+You can also configure wdio-swarm as an npm script for easier execution.
+
+Add Script to package.json
+```bash
+"scripts": {
+  "wdio-swarm:run:android": "wdio-swarm --config config/wdio.conf.js"
+}
+```
+Run with Data File [Any CLI options you can choose]
+```bash
+npm run wdio-swarm:run:android -- --data data.xlsx
+```
 ---
 
 ## 📄 License
