@@ -1,12 +1,12 @@
 {
   "name": "wdio-swarm",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Data-driven parallel test runner for WebdriverIO — unleash a swarm of workers from Excel, CSV, or JSON",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
   "type": "module",
   "bin": {
-    "wdio-swarm": "./bin/runner.ts"
+    "wdio-swarm": "./dist/bin/runner.js"
   },
   "scripts": {
     "build": "tsc",
@@ -14,6 +14,7 @@
     "dev": "tsx bin/runner.ts",
     "prepare": "npm run build"
   },
+  "files": ["dist"],
   "author": "Pratik Kumar",
   "keywords": [
     "webdriverio",
