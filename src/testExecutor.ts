@@ -35,9 +35,10 @@ export function executeTask(
     /**
      * Launch worker: npx wdio run <config> --spec <path>
      */
-    const command = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-    const child = spawn(command, ['wdio', 'run', configPath, '--spec', absoluteSpecPath], {
+    const cmd = `npx wdio run "${configPath}" --spec "${absoluteSpecPath}"`;
+    const child = spawn(cmd, [], {
       stdio: 'inherit',
+      shell: true,
       env: workerEnv,
     });
 
