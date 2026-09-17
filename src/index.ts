@@ -1,8 +1,11 @@
+import fs from 'fs';
 import { loadConfig } from './configLoader.js';
 import { DeviceManager, type Device } from './deviceManager.js';
 import { TaskQueue, type Task } from './taskQueue.js';
 import { executeTask } from './testExecutor.js';
 import { ResultsManager, type TestResult } from './resultsManager.js';
+import { patchConfigForOutputIsolation } from './configPatcher.js';
+import { flattenIsolatedResults } from './outputIsolation.js';
 
 // Re-export the resolver for package consumers
 export { resolveData, isRunnerActive } from './testDataResolver.js';
@@ -31,16 +34,41 @@ export async function executeRunner(
   console.log('Loading WDIO configuration...');
   const wdioConfig = await loadConfig(configPath);
 
+  // If any reporter uses a static outputDir, isolate each worker's output so
+  // concurrent workers don't race on the same directory (see configPatcher.ts).
+  const reporterPatch = patchConfigForOutputIsolation(configPath, wdioConfig);
+  const execConfigPath = reporterPatch?.patchedConfigPath || configPath;
+  if (reporterPatch) {
+    console.log(
+      `Reporter output dir(s) detected — isolating results per worker under run-<pid>: ${reporterPatch.outputDirs.join(', ')}`,
+    );
+  }
+
   // Pool management
   const capabilities = wdioConfig.capabilities || [];
   if (capabilities.length === 0) throw new Error('No capabilities found in WDIO config');
 
   const globalMax: number = wdioConfig.maxInstances || 1;
-  const expandedCapabilities: any[] = [];
+  let expandedCapabilities: any[] = [];
   capabilities.forEach((cap: any) => {
     const limit = cap.maxInstances || globalMax;
     for (let i = 0; i < limit; i++) expandedCapabilities.push(cap);
   });
+
+  // Hard cap on concurrent OS processes, independent of maxInstances math —
+  // protects the local machine and the device-grid's concurrency quota from
+  // an accidentally huge worker count.
+  const maxWorkers: number | null = options.maxWorkers ? parseInt(options.maxWorkers) : null;
+  if (maxWorkers && expandedCapabilities.length > maxWorkers) {
+    console.log(
+      `Capping concurrency at ${maxWorkers} worker(s) (--max-workers), pool was ${expandedCapabilities.length}.`,
+    );
+    expandedCapabilities = expandedCapabilities.slice(0, maxWorkers);
+  } else if (!maxWorkers && expandedCapabilities.length > 20) {
+    console.log(
+      `⚠️  ${expandedCapabilities.length} concurrent workers requested. If this exceeds your device-grid's concurrency quota, set --max-workers to match it.`,
+    );
+  }
 
   let taskList: Task[];
 
@@ -88,6 +116,10 @@ export async function executeRunner(
       // Termination condition
       if (taskIndex >= taskList.length && activeWorkers === 0) {
         resultsManager.save();
+        if (reporterPatch) {
+          reporterPatch.outputDirs.forEach(flattenIsolatedResults);
+          fs.rmSync(reporterPatch.patchedConfigPath, { force: true });
+        }
         return resolve();
       }
 
@@ -106,7 +138,7 @@ export async function executeRunner(
           `▶  [${task.id}] → ${task.specPath.split('/').pop()} (data index: ${task.dataIndex})`,
         );
 
-        runWithRetry(configPath, task, device.capability, maxRetries, taskTimeout)
+        runWithRetry(execConfigPath, task, device.capability, maxRetries, taskTimeout)
           .then(({ code, attempts }) => {
             const status: 'passed' | 'failed' = code === 0 ? 'passed' : 'failed';
             completed++;
