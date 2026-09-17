@@ -117,6 +117,21 @@ Filter your target data dynamically without editing the file.
 npx wdio-swarm -c wdio.conf.js -d data.xlsx --filter "Role=admin" --filter "Region=US"
 ```
 
+### Per-Row Spec Exclusion
+`--filter` drops whole rows before specs are assigned, so it can't express "this
+one feature spec doesn't apply to this one user." Add an `ExcludeSpecs` column
+to your data file instead — a comma-separated list of spec filename fragments
+that row should skip. Every other row still runs every spec as usual.
+
+| Username   | Role  | ExcludeSpecs                  |
+|------------|-------|--------------------------------|
+| user_001   | admin | -                              |
+| user_002   | basic | premiumFeature.test.js         |
+| user_003   | admin | -                               |
+
+Here `user_002` is excluded from `premiumFeature.test.js` but still runs every
+other spec.
+
 ---
 
 ## 🛠 CLI Reference

@@ -39,6 +39,37 @@ describe('TaskQueue', () => {
     });
   });
 
+  describe('Per-row spec exclusion', () => {
+    it('skips a spec for a row that lists it in ExcludeSpecs', () => {
+      const data = [
+        { name: 'alice' },
+        { name: 'bob', ExcludeSpecs: 'spec2.js' },
+        { name: 'charlie' },
+      ];
+      const queue = new TaskQueue(sampleSpecs, data, 'spec-first');
+      const tasks = queue.queue;
+
+      expect(tasks.length).toBe(5); // 6 - 1 excluded
+      expect(
+        tasks.some((t) => t.specPath === 'spec2.js' && t.dataIndex === 1),
+      ).toBe(false);
+      // bob still runs spec1
+      expect(tasks.some((t) => t.specPath === 'spec1.js' && t.dataIndex === 1)).toBe(true);
+    });
+
+    it('supports multiple comma-separated excluded specs', () => {
+      const data = [{ name: 'bob', ExcludeSpecs: 'spec1.js, spec2.js' }];
+      const queue = new TaskQueue(sampleSpecs, data, 'spec-first');
+      expect(queue.queue.length).toBe(0);
+    });
+
+    it('runs all specs when ExcludeSpecs is absent or empty', () => {
+      const data = [{ name: 'alice' }, { name: 'bob', ExcludeSpecs: '' }];
+      const queue = new TaskQueue(sampleSpecs, data, 'spec-first');
+      expect(queue.queue.length).toBe(4);
+    });
+  });
+
   describe('Queue Management', () => {
     it('should dispense tasks properly', () => {
       const queue = new TaskQueue(['s1'], [{ id: 1 }], 'spec-first');
