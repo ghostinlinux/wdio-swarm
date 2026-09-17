@@ -51,6 +51,11 @@ program
     process.env.WDR_TASK_TIMEOUT,
   )
   .option('--output <path>', 'Save results to a JSON file', process.env.WDR_OUTPUT)
+  .option(
+    '--max-workers <number>',
+    'Hard cap on concurrent workers, regardless of maxInstances',
+    process.env.WDR_MAX_WORKERS,
+  )
   .option('--rerun-failed <path>', 'Re-run only failed tasks from a results JSON file')
   .showHelpAfterError();
 

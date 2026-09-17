@@ -133,6 +133,7 @@ npx wdio-swarm -c wdio.conf.js -d data.xlsx --filter "Role=admin" --filter "Regi
 | `--retries` | Number of retries for failed tasks. | `WDR_RETRIES` | `0` |
 | `--task-timeout`| Max time in seconds for a single worker. | `WDR_TASK_TIMEOUT` | - |
 | `--output` | Path to save JSON results. | `WDR_OUTPUT` | - |
+| `--max-workers` | Hard cap on concurrent workers, regardless of `maxInstances`. | `WDR_MAX_WORKERS` | - |
 | `--rerun-failed` | Re-run failures from a results file. | - | - |
 
 ---
@@ -151,6 +152,7 @@ Every CLI flag can be pre-configured in your `.env` file or environment using th
 | `--retries` | `WDR_RETRIES` |
 | `--task-timeout`| `WDR_TASK_TIMEOUT` |
 | `--output` | `WDR_OUTPUT` |
+| `--max-workers` | `WDR_MAX_WORKERS` |
 
 ```bash
 # Example .env file
@@ -158,6 +160,26 @@ WDR_DATA=data/users.xlsx
 WDR_STRATEGY=user-first
 WDR_RETRIES=2
 WDR_TASK_TIMEOUT=300
+```
+
+## 📊 Reporter Output Isolation
+
+wdio-swarm runs many `wdio run` processes concurrently, one per task. If your
+`wdio.conf.js` configures a file-based reporter (allure, json, junit, ...) with
+a static `outputDir`, wdio-swarm automatically detects it and isolates each
+worker's results into a `run-<pid>` subdirectory, then merges them back
+together once the whole swarm run finishes — no changes needed in your
+`wdio.conf.js`.
+
+## ⚖️ Concurrency Cap
+
+Worker count is normally driven by `maxInstances`/capabilities in your
+`wdio.conf.js`, but that math can add up fast. Pass `--max-workers` to put a
+hard ceiling on concurrent OS processes — useful for matching your device
+grid's concurrency quota or just not overwhelming your machine.
+
+```bash
+npx wdio-swarm -c wdio.conf.js -d data.xlsx --max-workers 10
 ```
 
 ## 📦 NPM Script Usage
