@@ -9,6 +9,24 @@ export interface Task {
 }
 
 /**
+ * Reserved data column: a comma-separated list of spec filename fragments that
+ * a row should NOT run against (e.g. "nationsFindStore.test.js,nationsScanProduct.test.js"
+ * when that feature doesn't apply to this user). Matched as a substring against
+ * the full spec path, so a bare filename is enough. Absent/empty means "run all specs".
+ */
+const EXCLUDE_SPECS_COLUMN = 'ExcludeSpecs';
+
+function isSpecExcludedForRow(spec: string, row: any): boolean {
+  const raw = row?.[EXCLUDE_SPECS_COLUMN];
+  if (!raw) return false;
+  return String(raw)
+    .split(',')
+    .map((token) => token.trim())
+    .filter(Boolean)
+    .some((token) => spec.includes(token));
+}
+
+/**
  * TaskQueue
  *
  * Orquestrates the cross-product of specifications and data rows into a processable queue.
@@ -29,6 +47,7 @@ export class TaskQueue {
       // user-first: all specs for user1 queue before any spec for user2
       for (let i = 0; i < testData.length; i++) {
         for (const spec of specs) {
+          if (isSpecExcludedForRow(spec, testData[i])) continue;
           this.queue.push({
             id: `task_${taskId++}`,
             specPath: spec,
@@ -41,6 +60,7 @@ export class TaskQueue {
       // spec-first (default): all users for spec1 queue before any user for spec2
       for (const spec of specs) {
         for (let i = 0; i < testData.length; i++) {
+          if (isSpecExcludedForRow(spec, testData[i])) continue;
           this.queue.push({
             id: `task_${taskId++}`,
             specPath: spec,
