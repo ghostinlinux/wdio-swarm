@@ -2,13 +2,27 @@
 import { Command } from 'commander';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import xlsx from 'xlsx';
 const { readFile, utils } = xlsx;
+import { parse as parseCsv } from 'csv-parse/sync';
 import { executeRunner } from '../src/index.js';
 import { ResultsManager } from '../src/resultsManager.js';
 
-// Resolve package info manually for TS
-const packagePath = path.resolve(process.cwd(), 'package.json');
+// Resolve wdio-swarm's own package.json by walking up from this file, not the
+// consuming project's cwd (which has its own, unrelated package.json).
+function findOwnPackageJson(startDir: string): string {
+  let dir = startDir;
+  while (true) {
+    const candidate = path.join(dir, 'package.json');
+    if (fs.existsSync(candidate)) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) throw new Error('Could not locate wdio-swarm package.json');
+    dir = parent;
+  }
+}
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const packagePath = findOwnPackageJson(__dirname);
 const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 
 const program = new Command();
@@ -68,6 +82,12 @@ const options = program.opts();
  */
 async function main() {
   try {
+    const configPath = path.resolve(process.cwd(), options.config);
+    if (!fs.existsSync(configPath)) {
+      console.error(`Error: WebdriverIO config not found at ${configPath}`);
+      process.exit(1);
+    }
+
     let testData: any[] = [];
 
     // --- CASE A: Re-run mode ---
@@ -99,6 +119,12 @@ async function main() {
     // Load and parse data
     if (dataPath.endsWith('.json')) {
       testData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+    } else if (dataPath.endsWith('.csv')) {
+      testData = parseCsv(fs.readFileSync(dataPath, 'utf8'), {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+      });
     } else {
       const workbook = readFile(dataPath);
       testData = utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
